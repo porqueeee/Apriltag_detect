@@ -1,0 +1,106 @@
+#Código de cris
+
+import cv2 as cv
+import numpy as np
+from djitellopy import Tello
+import time
+import tkinter as tk
+
+# Conexión al dron
+tello = Tello()
+tello.connect()
+tello.streamon()
+
+print("Nivel de batería:", tello.get_battery(), "%")
+MIDDLE_TOLERANT = 15  # Margen de tolerancia para el centro de la línea
+
+def calcula_centroide(bw_im):
+    momentos = cv.moments(bw_im)
+    if momentos["m00"] != 0:
+        cx = int(momentos["m10"] / momentos["m00"])
+        cy = int(momentos["m01"] / momentos["m00"])
+        return (cx, cy)
+    return None
+
+def detener_dron():
+    global stop_drone
+    stop_drone = True
+
+root = tk.Tk()
+root.title("Control del Dron")
+
+boton_parar = tk.Button(root, text="Detener Dron", command=detener_dron, font=('Arial', 16), bg='red', fg='white')
+boton_parar.pack(pady=20)
+
+stop_drone = False
+
+print("Despegando...")
+tello.takeoff()
+ALTURA_FIJA = 40
+tello.move_up(ALTURA_FIJA)
+
+VELOCIDAD_AVANCE = 20  # Velocidad constante de avance
+ROTACION_GIRO = 15  # Grado de rotación para corregir la dirección
+
+# Bucle de captura de video
+while True:
+    if stop_drone:
+        print("Deteniendo el dron...")
+        tello.land()
+        break
+
+    frame_read = tello.get_frame_read()
+    im = frame_read.frame
+
+    if im is None or im.size == 0:
+        print("Error: no se pudo capturar la imagen correctamente.")
+        continue
+
+    # Recorte de la imagen para mostrar solo la mitad superior
+    height, width, _ = im.shape
+    im = im[:height // 2, :]  # Solo la mitad superior
+
+    # Conversión a HSV y creación de la máscara para el color naranja
+    hsv_im = cv.cvtColor(im, cv.COLOR_BGR2HSV)
+    
+    # Ajuste de rango para detectar color naranja
+    lColor = np.array([90, 50, 50])
+    dColor = np.array([130, 255, 255])  # Rango superior para el naranja
+    mask_white = cv.inRange(hsv_im, lColor, dColor)
+
+    # Mostrar la máscara para ver si detecta bien el color
+    cv.imshow("Máscara de Color Naranja", mask_white)
+
+    # Procesar la imagen binaria directamente para detectar el centroide
+    centroide = calcula_centroide(mask_white)
+    if centroide:
+        cx, cy = centroide
+        cv.circle(mask_white, (cx, cy), 5, (0, 0, 0), -1)  # Marca el centroide en la máscara
+
+        middle = width // 2
+
+        # Corregir dirección sin detener el avance
+        if cx > middle + MIDDLE_TOLERANT:
+            print("Corrigiendo a la DERECHA mientras avanza")
+            tello.send_rc_control(VELOCIDAD_AVANCE, 0, 0, ROTACION_GIRO)
+        elif cx < middle - MIDDLE_TOLERANT:
+            print("Corrigiendo a la IZQUIERDA mientras avanza")
+            tello.send_rc_control(VELOCIDAD_AVANCE, 0, 0, -ROTACION_GIRO)
+        else:
+            print("Avanzando hacia ADELANTE recto")
+            tello.send_rc_control(VELOCIDAD_AVANCE, 0, 0, 0)
+    else:
+        print("Línea perdida, deteniendo...")
+        tello.send_rc_control(0, 0, 0, 0)
+
+    # Muestra el video binarizado
+    cv.imshow("Procesamiento del Dron - Binario", mask_white)
+
+    time.sleep(0.05)
+
+    if cv.waitKey(1) & 0xFF == ord('q'):
+        break
+
+tello.land()
+tello.streamoff()
+cv.destroyAllWindows()

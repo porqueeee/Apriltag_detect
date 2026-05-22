@@ -1,0 +1,76 @@
+#no se.....
+
+import cv2 as cv
+import numpy as np
+from djitellopy import Tello
+import time
+import tkinter as tk
+
+# Conexión al dron
+tello = Tello()
+tello.connect()
+tello.streamon()
+
+print("Nivel de batería:", tello.get_battery(), "%")
+
+def detener_dron():
+    global stop_drone
+    stop_drone = True
+
+root = tk.Tk()
+root.title("Control del Dron")
+
+boton_parar = tk.Button(root, text="Detener Dron", command=detener_dron, font=('Arial', 16), bg='red', fg='white')
+boton_parar.pack(pady=20)
+
+stop_drone = False
+
+print("Despegando...")
+tello.takeoff()
+ALTURA_FIJA = 40
+tello.move_up(ALTURA_FIJA)
+
+VELOCIDAD_AVANCE = 10  # Velocidad constante de avance
+ROTACION_GIRO = 90  # Grado de rotación para corregir la dirección
+
+# Bucle de captura de video
+while True:
+    if stop_drone:
+        print("Deteniendo el dron...")
+        tello.land()
+        break
+
+    frame_read = tello.get_frame_read()
+    im = frame_read.frame
+
+    hsv_im = cv.cvtColor(im, cv.COLOR_BGR2RGB)
+    
+    
+    # Mostrar la máscara para ver si detecta bien el color
+    cv.imshow("Máscara de Color Naranja", hsv_im)
+    command=[1, 0]
+    # Procesar la imagen binaria directamente para detectar el centroide
+    while True:
+        for cx in command:
+            if cx == 2:
+                print("Giro izquierda")
+                tello.send_rc_control(VELOCIDAD_AVANCE, 0, 0, ROTACION_GIRO)
+                time.sleep(1)
+                print("Detner")
+                tello.send_rc_control(0, 0, 0, 0)
+                #tello.send_rc_control(VELOCIDAD_AVANCE, 0, 0, -ROTACION_GIRO)
+            elif cx==1:
+                print("Adelante")
+                tello.send_rc_control(VELOCIDAD_AVANCE, 0, 0, 0)
+                time.sleep(1)
+                print("Detner")
+                tello.send_rc_control(0, 0, 0, 0)
+            elif cx==0:
+                 break
+
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+
+tello.land()
+tello.streamoff()
+cv.destroyAllWindows()

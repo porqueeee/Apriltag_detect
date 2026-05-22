@@ -1,0 +1,19 @@
+PRIORIDAD ES QUE VUELE SIN DESCONECTARSE.
+Volar tello, decirle que se haga para enfrente (decidir que tan rápido y que tan lejos va)
+Detener tello y empezar a procesar imagen
+
+Guardar shape en una lista y color en otra (solo guardar aquellas identificadas), acumuular con un ciclo if a lo mejor 10 entradas,
+si de esas diez, más de 5 dan el mismo, mandar señal al tello de elegir una nueva dirección
+
+Se podría decir que avance muuuuy lento y que en cuanto detecte una figura se detenga, haga el análisis y ya
+me late que se pasaría de largo
+
+En versión final del código, eliminar "imshow" para reducir el peso del programa.
+
+
+
+
+
+
+encontrar el menor de los 3 parámetros, restas ese valor a todos? 
+la diferencia neta promedio, podria ser desviacion estandar? entonces si es baja es negro, gris o blanco 

@@ -1,0 +1,33 @@
+import cv2
+import numpy as np
+from djitellopy import Tello
+import time
+import tkinter as tk
+
+# Inicializar el dron Tello
+tello = Tello()
+tello.connect()
+print(f"Battery: {tello.get_battery()}%")
+
+# Iniciar la transmisión de video
+tello.streamon()
+
+try:
+    while True:
+        frame = tello.get_frame_read().frame  # Capturar un frame de la cámara del dron
+        frame= cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Mostrar las figuras y colores detectados en la ventana
+        cv2.imshow("Tello Camera", frame)
+
+        # Salir con la tecla 'q'
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+except KeyboardInterrupt:
+    print("Interrumpido manualmente.")
+
+finally:
+    # Detener el dron y cerrar todo
+    tello.streamoff()
+    tello.end()
+    cv2.destroyAllWindows()
