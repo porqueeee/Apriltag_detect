@@ -91,6 +91,7 @@ def apriltag(tablero):
             id.append( [int(map[i][0]),int(map[i][1])])
 
     print(id)
+    print(id[:7])
     #print(len(id))
 
     cv2.rectangle(tablero, ((int(gridlist[0][0])), (int(gridlist[0][1]))),  ((int(gridlist[0][0])+side), (int(gridlist[0][1])+side)),  (0, 0, 255))

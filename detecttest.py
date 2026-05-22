@@ -27,8 +27,10 @@ tello.streamon()
 #máxima distancia entre puntos para que sean considerados el mismo punto
 tolerancia=10
 
-def apriltag(tablero):
-
+def apriltag(tablero):  
+    tablero=tablero[280:655,171:548,:].copy()
+  
+    print(tablero.shape)
     tablero=cv2.cvtColor(tablero, cv2.COLOR_BGR2RGB)
     tablero_gris=cv2.cvtColor(tablero,cv2.COLOR_BGR2GRAY)
     tablero_gris_float=np.float32(tablero_gris)
@@ -104,17 +106,24 @@ def apriltag(tablero):
 
     print(tablero.shape)
     
-    return tablero
+    return id, tablero
 
+def drone(num):
+    if num==1:
+        True
 
 try:
     while True:
         frame = tello.get_frame_read().frame  # Capturar un frame de la cámara del dron
-        frame= cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # Mostrar las figuras y colores detectados en la ventana
-        detect=apriltag(frame)
-        cv2.imshow("Tello Camera", detect)
+        if frame is not None:
+    
+            frame= cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # Mostrar las figuras y colores detectados en la ventana
+            id, detect=apriltag(frame)
+            cv2.imshow("crop", detect)
 
+
+        
         # Salir con la tecla 'q'
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
