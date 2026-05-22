@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import cv2
 from djitellopy import Tello
 
+
 ap0=np.array([[0, 0], [0, 7], [1, 1], [1, 2], [1, 3], [1, 6], [2, 1]])
 ap1=np.array([[0, 0], [0, 7], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5] ])
 ap2=np.array([[0, 0], [0, 7], [1, 1], [1, 3], [1, 4], [2, 1], [2, 3]])
@@ -15,6 +16,8 @@ ap8=np.array([[0, 0], [0, 7], [1, 1], [1, 3], [1, 4], [1, 5], [2, 2]])
 ap9=np.array([[0, 0], [0, 7], [1, 2], [1, 3], [1, 4], [1, 5], [2, 1]])
 ap10=np.array([[0, 0], [0, 7], [1, 3], [1, 4], [2, 1], [2, 2], [2, 3]])
 ap11=np.array([[0, 0], [0, 7], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]])
+
+dictionary=np.concatenate((ap0,ap1,ap2,ap3,ap4,ap5,ap6,ap7,ap8,ap9,ap10,ap11))
 
 
 # Inicializar el dron Tello
@@ -29,12 +32,11 @@ tolerancia=10
 
 def apriltag(tablero):  
     tablero=tablero[280:655,171:548,:].copy()
-  
-    print(tablero.shape)
     tablero=cv2.cvtColor(tablero, cv2.COLOR_BGR2RGB)
     tablero_gris=cv2.cvtColor(tablero,cv2.COLOR_BGR2GRAY)
     tablero_gris_float=np.float32(tablero_gris)
-
+    _, thresh= cv2.threshold(tablero_gris, 0, 255, cv2.THRESH_OTSU)
+    tablero_gris_float=cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
     #Detección de esquinas
     destino=cv2.cornerHarris(tablero_gris_float,2,7,0.04)
     destino=cv2.dilate(destino,None)
@@ -77,8 +79,6 @@ def apriltag(tablero):
     gridlist= gridlist + organizer
     organizer=[corners[i]]
 
-
-    print(gridlist)
     #Determina y dibuja el controno del apriltag
     length=len(gridlist)-1
     #Longitud del lado del cuadro
@@ -94,17 +94,13 @@ def apriltag(tablero):
     id=[ [int(map[0][0]), int(map[0][1])]  ]
     for i in range(1,len(map)):
         if int(map[i][0])==int(map[i-1][0]) and int(map[i][1])==int(map[i-1][1]):
-            print(":(")
+            a=1
         else:
             id.append( [int(map[i][0]),int(map[i][1])])
-
-    print(id)
-    print(len(id))
 
     cv2.rectangle(tablero, ((int(gridlist[0][0])), (int(gridlist[0][1]))),  ((int(gridlist[0][0])+side), (int(gridlist[0][1])+side)),  (0, 0, 255))
     cv2.rectangle(tablero, ((int(gridlist[0][0])+fraction), (int(gridlist[0][1])+fraction)),  ((int(gridlist[-1][0])-fraction), (int(gridlist[-1][1]))-fraction ),  (255, 0, 0))
 
-    print(tablero.shape)
     
     return id, tablero
 
@@ -121,6 +117,18 @@ try:
             # Mostrar las figuras y colores detectados en la ventana
             id, detect=apriltag(frame)
             cv2.imshow("crop", detect)
+
+            april=100
+
+            for i in range(len(dictionary)):
+                arr=(id[:8]-dictionary[i])
+                sum=arr.sum()
+                if sum<10 and len(id)<50:
+                    april=i
+                    break
+
+            if april!=100:
+                print("Apriltag detected")
 
 
         
