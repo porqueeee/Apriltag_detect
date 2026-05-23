@@ -74,7 +74,7 @@ def apriltag(tablero):
     #Determina y dibuja el controno del apriltag
     length=len(gridlist)-1
     #Longitud del lado del cuadro
-    side= int(abs(gridlist[0][1]-gridlist[-1][1]))
+    side= int(abs(gridlist[0][0]-gridlist[-1][0]))
     #Longitud de cuadro de la cuadrícula
     fraction= int(side/7)
     if fraction==0:
@@ -86,12 +86,13 @@ def apriltag(tablero):
     id=[ [int(map[0][0]), int(map[0][1])]  ]
     for i in range(1,len(map)):
         if int(map[i][0])==int(map[i-1][0]) and int(map[i][1])==int(map[i-1][1]):
-            print(":(")
+            A=1
         else:
             id.append( [int(map[i][0]),int(map[i][1])])
 
-    print(id)
+
     print(id[:7])
+    print("/")
     #print(len(id))
 
     cv2.rectangle(tablero, ((int(gridlist[0][0])), (int(gridlist[0][1]))),  ((int(gridlist[0][0])+side), (int(gridlist[0][1])+side)),  (0, 0, 255))
@@ -100,23 +101,25 @@ def apriltag(tablero):
     return tablero
 
 
-tablero = cv2.imread('ap4.jpeg')
+tablero = cv2.imread('ap11.jpeg')
+tablero1= tablero.copy()
+tablero2=tablero1.copy()
+tablero3=tablero2.copy()
+
 tablero=apriltag(tablero)
 
-tablero = cv2.imread('ap4.jpeg')
-tablero= cv2.rotate(tablero,cv2.ROTATE_90_CLOCKWISE)
-tablero=apriltag(tablero)
+tablero1= cv2.rotate(tablero1,cv2.ROTATE_90_CLOCKWISE)
+tablero1=apriltag(tablero1)
 
-tablero = cv2.imread('ap4.jpeg')
-tablero= cv2.rotate(tablero,cv2.ROTATE_180)
-tablero=apriltag(tablero)
+tablero2= cv2.rotate(tablero2,cv2.ROTATE_180)
+tablero2=apriltag(tablero2)
+
+
+tablero3= cv2.rotate(tablero3,cv2.ROTATE_90_COUNTERCLOCKWISE)
+tablero3=apriltag(tablero3)
 plt.figure()
-plt.imshow(tablero)
+plt.imshow(tablero3)
 
-tablero = cv2.imread('ap4.jpeg')
-tablero= cv2.rotate(tablero,cv2.ROTATE_90_COUNTERCLOCKWISE)
-
-tablero=apriltag(tablero)
 #plt.figure()
 #plt.imshow(tablero)
 
