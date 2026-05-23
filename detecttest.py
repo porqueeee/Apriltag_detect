@@ -1,8 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-from djitellopy import Tello
+from djitellopy import tello
+from scipy import stats
 
+veredict=[]
+count=0
 
 ap0=np.array([[0, 0], [0, 7], [1, 1], [1, 2], [1, 3], [1, 6], [2, 1]])
 ap1=np.array([[0, 0], [0, 7], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5] ])
@@ -17,15 +20,17 @@ ap9=np.array([[0, 0], [0, 7], [1, 2], [1, 3], [1, 4], [1, 5], [2, 1]])
 ap10=np.array([[0, 0], [0, 7], [1, 3], [1, 4], [2, 1], [2, 2], [2, 3]])
 ap11=np.array([[0, 0], [0, 7], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]])
 
-dictionary=np.concatenate((ap0,ap1,ap2,ap3,ap4,ap5,ap6,ap7,ap8,ap9,ap10,ap11))
+dictionary=np.concatenate(([ap0],[ap1],[ap2],[ap3],[ap4],[ap5],[ap6],[ap7],[ap8],[ap9],[ap10],[ap11]))
 
 
 # Inicializar el dron Tello
-tello = Tello()
+tello = tello()
 tello.connect()
 print(f"Battery: {tello.get_battery()}%")
 # Iniciar la transmisión de video
 tello.streamon()
+tello.takeoff()
+
 
 #máxima distancia entre puntos para que sean considerados el mismo punto
 tolerancia=10
@@ -35,8 +40,10 @@ def apriltag(tablero):
     tablero=cv2.cvtColor(tablero, cv2.COLOR_BGR2RGB)
     tablero_gris=cv2.cvtColor(tablero,cv2.COLOR_BGR2GRAY)
     tablero_gris_float=np.float32(tablero_gris)
-    _, thresh= cv2.threshold(tablero_gris, 0, 255, cv2.THRESH_OTSU)
-    tablero_gris_float=cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+    
+    #_, thresh= cv2.threshold(tablero_gris, 0, 255, cv2.THRESH_OTSU)
+    #xtablero_gris_float=cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+    
     #Detección de esquinas
     destino=cv2.cornerHarris(tablero_gris_float,2,7,0.04)
     destino=cv2.dilate(destino,None)
@@ -106,7 +113,41 @@ def apriltag(tablero):
 
 def drone(num):
     if num==1:
-        True
+        tello.land()
+    
+    if num==2:
+        return True
+    
+    if num==3:
+        tello.rotate_clockwise(360)
+    
+    if num==4:
+        tello.rotate_clockwise(180)
+    
+    if num==5:
+        tello.rotate_counter_clockwise(90)
+    
+    if num==6:
+        tello.rotate_counter_clockwise(90) 
+    
+    if num==7:
+        tello.rotate_clockwise(90)
+    
+    if num==8:
+        tello.rotate_counter_clockwise(90)
+    
+    if num==9:
+        tello.land()
+    
+    if num==10:
+        tello.rotate_clockwise(90)
+
+    if num==11:
+        return True
+    
+    return True
+
+    
 
 try:
     while True:
@@ -121,15 +162,27 @@ try:
             april=100
 
             for i in range(len(dictionary)):
-                arr=(id[:8]-dictionary[i])
-                sum=arr.sum()
-                if sum<10 and len(id)<50:
-                    april=i
-                    break
+                if len(id)>=7:
+                    arr=np.absolute(id[:7]-dictionary[i])
+                    sum=arr.sum()
+                    if sum<3 and len(id)<35:
+                        april=i
+                        break
+
 
             if april!=100:
-                print("Apriltag detected")
+                print(april)
+                veredict.append(april)
+                count=count+1
 
+            else: 
+                print("")
+
+            if count>=10:
+                moda=stats.mode(veredict)
+                act=drone(moda)
+                count=0
+                veredict=[]
 
         
         # Salir con la tecla 'q'
@@ -141,6 +194,7 @@ except KeyboardInterrupt:
 
 finally:
     # Detener el dron y cerrar todo
+    tello.land()
     tello.streamoff()
     tello.end()
     cv2.destroyAllWindows()
