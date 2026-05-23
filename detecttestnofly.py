@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-from djitellopy import tello
+from djitellopy import Tello
 from scipy import stats
 
 veredict=[]
@@ -19,17 +19,15 @@ ap8=np.array([[0, 0], [0, 7], [1, 1], [1, 3], [1, 4], [1, 5], [2, 2]])
 ap9=np.array([[0, 0], [0, 7], [1, 2], [1, 3], [1, 4], [1, 5], [2, 1]])
 ap10=np.array([[0, 0], [0, 7], [1, 3], [1, 4], [2, 1], [2, 2], [2, 3]])
 ap11=np.array([[0, 0], [0, 7], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5]])
-
 dictionary=np.concatenate(([ap0],[ap1],[ap2],[ap3],[ap4],[ap5],[ap6],[ap7],[ap8],[ap9],[ap10],[ap11]))
 
 
 # Inicializar el dron Tello
-tello = tello()
+tello = Tello()
 tello.connect()
 print(f"Battery: {tello.get_battery()}%")
 # Iniciar la transmisión de video
 tello.streamon()
-tello.takeoff()
 
 
 #máxima distancia entre puntos para que sean considerados el mismo punto
@@ -153,7 +151,7 @@ try:
     while True:
         frame = tello.get_frame_read().frame  # Capturar un frame de la cámara del dron
         if frame is not None:
-    
+            frame=cv2.flip(frame, 0)
             frame= cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             # Mostrar las figuras y colores detectados en la ventana
             id, detect=apriltag(frame)
@@ -181,6 +179,7 @@ try:
             if count>=10:
                 moda=stats.mode(veredict)
                 act=drone(moda)
+                print("Veredict", moda)
                 count=0
                 veredict=[]
 
@@ -194,7 +193,7 @@ except KeyboardInterrupt:
 
 finally:
     # Detener el dron y cerrar todo
-    tello.land()
+    #tello.land()
     tello.streamoff()
     tello.end()
     cv2.destroyAllWindows()
