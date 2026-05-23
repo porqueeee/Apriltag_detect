@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-from djitellopy import Tello
+from djitellopy import tello
 from scipy import stats
-import time
 
 veredict=[]
 count=0
@@ -25,34 +24,12 @@ dictionary=np.concatenate(([ap0],[ap1],[ap2],[ap3],[ap4],[ap5],[ap6],[ap7],[ap8]
 
 
 # Inicializar el dron Tello
-tello = Tello()
+tello = tello()
 tello.connect()
 print(f"Battery: {tello.get_battery()}%")
 # Iniciar la transmisión de video
 tello.streamon()
 tello.takeoff()
-
-time.sleep(2)
-
-print("Ascending...")
-
-start_up = time.time()
-
-while time.time() - start_up < 1.2:
-
-    # up-down velocity
-    tello.send_rc_control(0, 0, 10, 0)
-
-    time.sleep(0.05)
-
-tello.send_rc_control(0, 0, 0, 0)
-
-height= tello.get_height()
-
-if height>=20:
-    tello.move_down(height-20)
-elif height<20:
-    tello.moveup(20-height)
 
 
 #máxima distancia entre puntos para que sean considerados el mismo punto
@@ -174,7 +151,6 @@ def drone(num):
 
 try:
     while True:
-        tello.send_rc_control(0, 10, 0, 0)
         frame = tello.get_frame_read().frame  # Capturar un frame de la cámara del dron
         if frame is not None:
     
@@ -190,7 +166,6 @@ try:
                     arr=np.absolute(id[:7]-dictionary[i])
                     sum=arr.sum()
                     if sum<3 and len(id)<35:
-                        tello.send_rc_control(0, 0, 0, 0)
                         april=i
                         break
 

@@ -58,10 +58,6 @@ tello.takeoff()
 
 time.sleep(2)
 
-# ====================================
-# ASCEND ~40 CM
-# ====================================
-
 print("Ascending...")
 
 start_up = time.time()
